@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DJ Kakeibo - Aurora Mindful Budgeting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        aurora: {
+                            deepBg: '#080d1a',
+                            cardBg: '#0f172a',
+                            glass: 'rgba(15, 23, 42, 0.75)',
+                            glassBorder: 'rgba(255, 255, 255, 0.12)',
+                            cyan: '#06b6d4',
+                            teal: '#14b8a6',
+                            emerald: '#10b981',
+                            greenGlow: '#34d399',
+                            purple: '#a855f7',
+                            magenta: '#d8b4fe',
+                            pink: '#ec4899',
+                            muted: '#94a3b8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    },
+                    animation: {
+                        'aurora-pulse': 'auroraGlow 8s ease-in-out infinite alternate',
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        auroraGlow: {
+                            '0%': { opacity: '0.4', transform: 'scale(1) rotate(0deg)' },
+                            '50%': { opacity: '0.7', transform: 'scale(1.1) rotate(3deg)' },
+                            '100%': { opacity: '0.4', transform: 'scale(1) rotate(0deg)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #080d1a;
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .aurora-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .aurora-blob-1 {
+            position: absolute;
+            top: -10%;
+            left: -20%;
+            width: 90vw;
+            height: 90vw;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, rgba(6, 182, 212, 0.15) 50%, rgba(0,0,0,0) 80%);
+            filter: blur(50px);
+        }
+
+        .aurora-blob-2 {
+            position: absolute;
+            top: 30%;
+            right: -25%;
+            width: 85vw;
+            height: 85vw;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(236, 72, 153, 0.12) 50%, rgba(0,0,0,0) 80%);
+            filter: blur(55px);
+        }
+
+        .aurora-blob-3 {
+            position: absolute;
+            bottom: -10%;
+            left: 10%;
+            width: 80vw;
+            height: 80vw;
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.2) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(0,0,0,0) 80%);
+            filter: blur(50px);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card-glow {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.15);
+        }
+
+        .glow-text-cyan {
+            text-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+        }
+
+        .glow-text-green {
+            text-shadow: 0 0 12px rgba(52, 211, 153, 0.5);
+        }
+
+        .glow-text-purple {
+            text-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col justify-between max-w-md mx-auto relative antialiased selection:bg-aurora-teal selection:text-white">
+
+    <!-- Ambient Aurora Canvas Background -->
+    <div class="aurora-bg">
+        <div class="aurora-blob-1 animate-aurora-pulse"></div>
+        <div class="aurora-blob-2 animate-aurora-pulse" style="animation-delay: -3s;"></div>
+        <div class="aurora-blob-3 animate-aurora-pulse" style="animation-delay: -5s;"></div>
+    </div>
+
+    <header class="bg-aurora-deepBg/80 backdrop-blur-md px-5 py-3.5 border-b border-white/10 flex items-center justify-between z-20 sticky top-0">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-aurora-emerald via-aurora-teal to-aurora-purple p-0.5 shadow-lg shadow-aurora-emerald/20 flex items-center justify-center">
+                <div class="w-full h-full bg-aurora-deepBg rounded-[10px] flex items-center justify-center text-xs">
+                    🌌
+                </div>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
+                    DJ Kakeibo
+                </h1>
+                <span id="header-user-title" class="text-[10px] font-medium text-aurora-greenGlow block tracking-wide">Kakeibo Apprentice</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <!-- Streak Counter Badge -->
+            <button onclick="switchTab('gamification')" class="flex items-center space-x-1 bg-white/5 border border-amber-500/30 px-2.5 py-1 rounded-full text-xs font-semibold text-amber-300 hover:bg-amber-500/10 transition-all">
+                <span>🔥</span>
+                <span id="header-streak-count">0</span>
+            </button>
+
+            <!-- Quick Currency Selector -->
+            <select id="header-currency-select" onchange="handleCurrencySelect(event)" class="text-xs bg-white/5 border border-white/15 text-white px-2 py-1 rounded-full font-bold focus:outline-none focus:border-aurora-teal cursor-pointer">
+                <option value="₹" class="bg-aurora-cardBg">₹ (INR)</option>
+                <option value="$" class="bg-aurora-cardBg">$ (USD)</option>
+                <option value="€" class="bg-aurora-cardBg">€ (EUR)</option>
+                <option value="£" class="bg-aurora-cardBg">£ (GBP)</option>
+                <option value="¥" class="bg-aurora-cardBg">¥ (JPY)</option>
+                <option value="₱" class="bg-aurora-cardBg">₱ (PHP)</option>
+                <option value="R$" class="bg-aurora-cardBg">R$ (BRL)</option>
+                <option value="A$" class="bg-aurora-cardBg">A$ (AUD)</option>
+                <option value="custom" class="bg-aurora-cardBg">✏️ Custom...</option>
+            </select>
+
+            <button onclick="openSetupModal()" class="text-xs bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-full transition-all">
+                ⚙️
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto pb-28 px-4 pt-4 hide-scrollbar z-10 space-y-4">
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="space-y-4">
+            
+            <!-- Safe Zone / Budget Health Banner -->
+            <div id="health-meter-card" class="glass-card p-4 rounded-2xl border flex items-center justify-between border-aurora-emerald/30 shadow-lg">
+                <div class="flex items-center space-x-3">
+                    <div id="health-icon-bg" class="w-10 h-10 rounded-xl bg-aurora-emerald/20 flex items-center justify-center text-lg">
+                        🛡️
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span id="health-status-badge" class="text-xs font-bold text-aurora-greenGlow uppercase tracking-wider">Safe Zone</span>
+                            <span id="health-percentage" class="text-[11px] text-aurora-muted">(100% budget left)</span>
+                        </div>
+                        <p id="health-status-desc" class="text-xs text-slate-300 mt-0.5">Mindful choices keep your budget glowing!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Allowance & Income / Target Summary -->
+            <div class="glass-card-glow p-5 rounded-2xl relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-aurora-teal/20 rounded-full blur-2xl"></div>
+                
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <span class="text-xs text-aurora-muted font-medium uppercase tracking-wider block">Monthly Spending Allowance</span>
+                        <h2 id="dash-allowance" class="text-3xl font-extrabold text-white mt-1 glow-text-green">$0.00</h2>
+                    </div>
+                    <button onclick="openSetupModal()" class="text-[10px] bg-aurora-teal/20 border border-aurora-teal/40 text-aurora-teal font-semibold px-2.5 py-1 rounded-full hover:bg-aurora-teal/30 transition-all">
+                        Adjust Setup
+                    </button>
+                </div>
+
+                <!-- Savings Goal Mini Bar -->
+                <div class="mt-4 pt-3 border-t border-white/10 space-y-1.5">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-aurora-muted flex items-center gap-1">
+                            <span>🎯</span> Target Savings: <strong id="dash-target-amount" class="text-white">$0</strong>
+                        </span>
+                        <span id="dash-savings-rate" class="text-aurora-purple font-bold">20% Goal</span>
+                    </div>
+                    <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                        <div id="savings-progress-bar" class="bg-gradient-to-r from-aurora-teal via-aurora-cyan to-aurora-purple h-full rounded-full transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-white/10 text-xs">
+                    <div>
+                        <span class="text-aurora-muted block text-[11px]">Monthly Income</span>
+                        <span id="dash-income" class="font-bold text-white text-sm">$0.00</span>
+                    </div>
+                    <div>
+                        <span class="text-aurora-muted block text-[11px]">Total Spent So Far</span>
+                        <span id="dash-spent-total" class="font-bold text-aurora-pink text-sm">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kakeibo 4 Pillars Spending Allocation -->
+            <div class="glass-card p-5 rounded-2xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <span>🏛️</span> The 4 Kakeibo Pillars
+                    </h3>
+                    <span class="text-[11px] text-aurora-muted">Category Totals</span>
+                </div>
+
+                <div id="pillars-container" class="space-y-3.5 pt-1">
+                    <!-- Dynamic Pillars Render -->
+                </div>
+            </div>
+
+            <!-- Add Purchase Action Banner -->
+            <div class="bg-gradient-to-r from-aurora-teal/30 via-aurora-purple/30 to-aurora-pink/20 border border-white/15 p-4 rounded-2xl flex items-center justify-between shadow-lg">
+                <div>
+                    <h4 class="font-bold text-sm text-white">Mindful Purchase Log</h4>
+                    <p class="text-xs text-aurora-muted mt-0.5">Pause & reflect before you spend.</p>
+                </div>
+                <button onclick="openExpenseModal()" class="bg-gradient-to-r from-aurora-teal to-aurora-emerald text-aurora-deepBg font-bold px-4 py-2.5 rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all text-xs flex items-center gap-1.5">
+                    <span class="text-base">+</span> Record Expense
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 2: GAMIFICATION & BADGES -->
+        <section id="tab-gamification" class="space-y-4 hidden">
+            <!-- Level & XP Header -->
+            <div class="glass-card-glow p-5 rounded-2xl relative overflow-hidden text-center space-y-3">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-aurora-teal to-aurora-purple p-0.5 mx-auto animate-float">
+                    <div class="w-full h-full bg-aurora-deepBg rounded-[14px] flex items-center justify-center text-3xl" id="user-badge-avatar">
+                        🌱
+                    </div>
+                </div>
+                
+                <div>
+                    <span class="text-xs uppercase tracking-widest text-aurora-teal font-extrabold" id="user-level-label">LEVEL 1</span>
+                    <h2 class="text-xl font-extrabold text-white mt-0.5" id="user-rank-title">Kakeibo Apprentice</h2>
+                    <p class="text-xs text-aurora-muted mt-1" id="user-rank-quote">"Every journey of financial mindfulness begins with a single step."</p>
+                </div>
+
+                <!-- XP Progress Bar -->
+                <div class="space-y-1.5 pt-2">
+                    <div class="flex justify-between text-xs text-aurora-muted">
+                        <span>Mindful XP</span>
+                        <span id="user-xp-text" class="text-aurora-greenGlow font-bold">0 / 100 XP</span>
+                    </div>
+                    <div class="w-full bg-white/10 h-3 rounded-full overflow-hidden p-0.5">
+                        <div id="user-xp-bar" class="bg-gradient-to-r from-aurora-teal via-aurora-cyan to-aurora-greenGlow h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Streak Info Box -->
+            <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-2xl">
+                        🔥
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-white">Daily Mindful Streak</h4>
+                        <p class="text-xs text-aurora-muted">Log expenses or log in daily under allowance.</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span id="streak-days-count" class="text-2xl font-black text-amber-400 block">0</span>
+                    <span class="text-[10px] text-aurora-muted uppercase tracking-wider font-semibold">Days Active</span>
+                </div>
+            </div>
+
+            <!-- Badges Gallery Grid -->
+            <div class="glass-card p-5 rounded-2xl space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <span>🏆</span> Milestones & Badges
+                    </h3>
+                    <span id="badges-unlocked-count" class="text-xs text-aurora-teal font-semibold">0 / 6 Unlocked</span>
+                </div>
+
+                <div id="badges-grid" class="grid grid-cols-2 gap-3 pt-2">
+                    <!-- Dynamic Badges -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: HISTORY & LOGS -->
+        <section id="tab-history" class="space-y-4 hidden">
+            <div class="flex justify-between items-center px-1">
+                <h2 class="font-bold text-base text-white">Mindful Expense Ledger</h2>
+                <span id="total-expenses-count" class="text-xs text-aurora-muted bg-white/5 border border-white/10 px-3 py-1 rounded-full">0 entries</span>
+            </div>
+
+            <div id="expenses-list" class="space-y-2.5">
+                <!-- Dynamic Expense List -->
+            </div>
+        </section>
+
+        <!-- TAB 4: REFLECTION & REVIEW -->
+        <section id="tab-reflection" class="space-y-4 hidden">
+            <div class="glass-card p-5 rounded-2xl space-y-2">
+                <h2 class="font-bold text-lg text-white flex items-center gap-2">
+                    <span>🧘‍♀️</span> Monthly Reflection
+                </h2>
+                <p class="text-xs text-aurora-muted leading-relaxed">
+                    Kakeibo is grounded in intentional reflection. Contemplate these questions at the end of each week or month to grow your financial awareness.
+                </p>
+            </div>
+
+            <!-- Reflection Questions Form -->
+            <div class="glass-card p-5 rounded-2xl space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-aurora-teal uppercase tracking-wider mb-1.5">1. How much money do you currently have?</label>
+                    <input type="text" id="ref-q1" oninput="saveReflection()" placeholder="Current balance, emergency buffer..." class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-aurora-teal">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-aurora-teal uppercase tracking-wider mb-1.5">2. How close are you to your savings target?</label>
+                    <input type="text" id="ref-q2" oninput="saveReflection()" placeholder="Savings goal progress notes..." class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-aurora-teal">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-aurora-teal uppercase tracking-wider mb-1.5">3. Where are you spending the most?</label>
+                    <input type="text" id="ref-q3" oninput="saveReflection()" placeholder="Notice any impulse purchases in Wants..." class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-aurora-teal">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-aurora-teal uppercase tracking-wider mb-1.5">4. What habits can you improve next month?</label>
+                    <textarea id="ref-q4" oninput="saveReflection()" rows="3" placeholder="Actionable habits for next month..." class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-aurora-teal"></textarea>
+                </div>
+            </div>
+
+            <!-- Breakdown Chart -->
+            <div class="glass-card p-5 rounded-2xl space-y-3">
+                <h3 class="font-semibold text-white text-sm">Visual Spending Distribution</h3>
+                <div class="relative h-56 flex items-center justify-center">
+                    <canvas id="kakeiboChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Data Controls -->
+            <div class="flex space-x-3">
+                <button onclick="exportData()" class="flex-1 bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded-xl text-xs transition-all border border-white/10">
+                    📥 Export JSON
+                </button>
+                <button onclick="resetData()" class="flex-1 bg-aurora-pink/20 hover:bg-aurora-pink/30 text-aurora-pink font-medium py-3 rounded-xl text-xs transition-all border border-aurora-pink/30">
+                    🗑️ Reset Data
+                </button>
+            </div>
+        </section>
+
+        <!-- Made with Love Footer Note -->
+        <footer class="pt-6 pb-2 text-center border-t border-white/5 mt-6">
+            <p class="text-xs text-aurora-muted font-medium flex items-center justify-center gap-1">
+                Made with 💖 by 
+                <a href="https://www.linkedin.com/in/dariusdnu/" target="_blank" rel="noopener noreferrer" class="text-aurora-greenGlow hover:text-aurora-teal font-bold underline underline-offset-4 decoration-aurora-teal/50 hover:decoration-aurora-teal transition-all">
+                    Dhineshbabu Perumal Samy
+                </a>
+            </p>
+        </footer>
+
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-aurora-deepBg/90 backdrop-blur-xl border-t border-white/10 px-5 py-2.5 flex justify-between items-center z-30">
+        <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="flex flex-col items-center space-y-1 text-aurora-teal transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="text-[10px] font-semibold tracking-tight">Dashboard</span>
+        </button>
+
+        <button onclick="switchTab('gamification')" id="nav-btn-gamification" class="flex flex-col items-center space-y-1 text-aurora-muted transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-[10px] font-medium tracking-tight">Level & Badges</span>
+        </button>
+
+        <!-- Floating Add Expense Center Action Button -->
+        <button onclick="openExpenseModal()" class="bg-gradient-to-tr from-aurora-teal via-aurora-emerald to-aurora-cyan text-aurora-deepBg w-12 h-12 rounded-full shadow-lg shadow-aurora-teal/30 flex items-center justify-center -mt-6 hover:scale-105 active:scale-95 transition-transform border-2 border-aurora-deepBg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </button>
+
+        <button onclick="switchTab('history')" id="nav-btn-history" class="flex flex-col items-center space-y-1 text-aurora-muted transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span class="text-[10px] font-medium tracking-tight">Ledger</span>
+        </button>
+
+        <button onclick="switchTab('reflection')" id="nav-btn-reflection" class="flex flex-col items-center space-y-1 text-aurora-muted transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            <span class="text-[10px] font-medium tracking-tight">Reflection</span>
+        </button>
+    </nav>
+
+    <div id="setup-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-aurora-deepBg border border-white/20 w-full max-w-md rounded-3xl p-6 space-y-5 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-aurora-purple/30 rounded-full blur-2xl"></div>
+
+            <div class="flex justify-between items-center relative z-10">
+                <div>
+                    <span class="text-[10px] font-bold text-aurora-teal uppercase tracking-widest block">Streamlined Setup</span>
+                    <h3 class="font-extrabold text-lg text-white">Monthly Financial Setup</h3>
+                </div>
+                <button onclick="closeSetupModal()" class="text-aurora-muted hover:text-white text-sm font-bold p-1">✕</button>
+            </div>
+            
+            <form id="setup-form" onsubmit="handleSetupSubmit(event)" class="space-y-4 relative z-10">
+                <!-- Currency Selection -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-aurora-muted uppercase tracking-wider mb-1">Currency</label>
+                        <select id="setup-currency-select" onchange="handleCurrencySelect(event)" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-aurora-teal">
+                            <option value="₹" class="bg-aurora-cardBg">₹ (INR)</option>
+                            <option value="$" class="bg-aurora-cardBg">$ (USD)</option>
+                            <option value="€" class="bg-aurora-cardBg">€ (EUR)</option>
+                            <option value="£" class="bg-aurora-cardBg">£ (GBP)</option>
+                            <option value="¥" class="bg-aurora-cardBg">¥ (JPY)</option>
+                            <option value="₱" class="bg-aurora-cardBg">₱ (PHP)</option>
+                            <option value="R$" class="bg-aurora-cardBg">R$ (BRL)</option>
+                            <option value="A$" class="bg-aurora-cardBg">A$ (AUD)</option>
+                            <option value="custom" class="bg-aurora-cardBg">✏️ Custom Symbol...</option>
+                        </select>
+                    </div>
+                    <div id="custom-currency-container" class="hidden">
+                        <label class="block text-[11px] font-bold text-aurora-muted uppercase tracking-wider mb-1">Symbol</label>
+                        <input type="text" id="setup-custom-currency" placeholder="e.g. Kr, S$" maxlength="5" oninput="handleCustomCurrencyInput(event)" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-aurora-teal">
+                    </div>
+                </div>
+
+                <!-- 1. Monthly Income -->
+                <div>
+                    <label class="block text-[11px] font-bold text-aurora-teal uppercase tracking-wider mb-1">1. Total Monthly Income (<span class="currency-label-symbol">$</span>)</label>
+                    <input type="number" step="0.01" id="setup-income" required placeholder="e.g., 4000" oninput="recalculateSetupAllowance()" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-aurora-teal font-bold">
+                </div>
+
+                <!-- 2. Target Savings Goal with Presets -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[11px] font-bold text-aurora-purple uppercase tracking-wider">2. Monthly Savings Goal (<span class="currency-label-symbol">$</span>)</label>
+                        <span class="text-[10px] text-aurora-muted">Quick Presets:</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 mb-2">
+                        <button type="button" onclick="applyPresetSavingsRate(0.10)" class="bg-white/5 border border-white/10 hover:border-aurora-purple py-1.5 rounded-lg text-xs font-semibold text-aurora-magenta transition-all">10%</button>
+                        <button type="button" onclick="applyPresetSavingsRate(0.20)" class="bg-white/5 border border-white/10 hover:border-aurora-purple py-1.5 rounded-lg text-xs font-semibold text-aurora-magenta transition-all">20%</button>
+                        <button type="button" onclick="applyPresetSavingsRate(0.30)" class="bg-white/5 border border-white/10 hover:border-aurora-purple py-1.5 rounded-lg text-xs font-semibold text-aurora-magenta transition-all">30%</button>
+                    </div>
+
+                    <input type="number" step="0.01" id="setup-savings-target" required placeholder="e.g., 800" oninput="recalculateSetupAllowance()" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-aurora-purple font-bold">
+                </div>
+
+                <!-- Live Allowance Calculation Preview -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 text-center space-y-1">
+                    <span class="text-[10px] uppercase tracking-wider text-aurora-muted font-bold block">Calculated Available Monthly Spending Allowance</span>
+                    <span id="setup-calculated-allowance" class="text-2xl font-black text-aurora-greenGlow block">$0.00</span>
+                    <p class="text-[10px] text-aurora-muted">Automatically divided into 4 Kakeibo categories for balanced spending.</p>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-aurora-teal via-aurora-emerald to-aurora-cyan text-aurora-deepBg font-extrabold py-3.5 rounded-xl shadow-lg hover:brightness-110 transition-all text-sm">
+                    ✨ Save & Initialize Mindful Budget
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="expense-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden animate-fade-in">
+        <div class="bg-aurora-deepBg border border-white/20 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 space-y-4 shadow-2xl relative overflow-hidden">
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] font-bold text-aurora-pink uppercase tracking-widest block">Mindful Logging</span>
+                    <h3 class="font-extrabold text-lg text-white">Record New Purchase</h3>
+                </div>
+                <button onclick="closeExpenseModal()" class="text-aurora-muted hover:text-white text-sm font-bold p-1">✕</button>
+            </div>
+            
+            <form id="expense-form" onsubmit="handleExpenseSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-aurora-muted uppercase tracking-wider mb-1">Amount (<span class="currency-label-symbol">$</span>)</label>
+                    <input type="number" step="0.01" id="exp-amount" required placeholder="0.00" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-base font-bold text-white focus:outline-none focus:border-aurora-teal">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-aurora-muted uppercase tracking-wider mb-1">Kakeibo Pillar Category</label>
+                    <select id="exp-pillar" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-aurora-teal">
+                        <option value="survival" class="bg-aurora-cardBg">🌱 Needs / Survival (Food, Groceries, Medical, Transport)</option>
+                        <option value="optional" class="bg-aurora-cardBg">☕ Wants / Optional (Dining, Shopping, Cafe, Leisure)</option>
+                        <option value="culture" class="bg-aurora-cardBg">🎨 Culture / Learning (Books, Courses, Arts, Hobbies)</option>
+                        <option value="unexpected" class="bg-aurora-cardBg">⚡ Unplanned / Emergency (Repairs, Gifts, Urgent)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-aurora-muted uppercase tracking-wider mb-1">Note / Description</label>
+                    <input type="text" id="exp-note" placeholder="e.g., Weekly farmers market" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-aurora-teal">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-aurora-muted uppercase tracking-wider mb-1">Date</label>
+                    <input type="date" id="exp-date" class="w-full bg-white/5 border border-white/15 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-aurora-teal">
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-aurora-teal to-aurora-emerald text-aurora-deepBg font-extrabold py-3.5 rounded-xl shadow-lg hover:brightness-110 transition-all text-sm mt-2">
+                    Record & Earn XP (+15 XP)
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Core Application State
+        let state = {
+            currency: '₹',
+            isCustomCurrency: false,
+            income: 50000,
+            savingsTarget: 10000,
+            xp: 45,
+            level: 1,
+            streak: 3,
+            lastLoggedDate: new Date().toISOString().split('T')[0],
+            unlockedBadges: ['first_step', 'mindful_logger'],
+            expenses: [
+                { id: 1, amount: 1250.00, pillar: 'survival', note: 'Weekly Groceries', date: '2026-10-02' },
+                { id: 2, amount: 350.00, pillar: 'optional', note: 'Matcha Latte & Muffin', date: '2026-10-05' },
+                { id: 3, amount: 890.00, pillar: 'culture', note: 'Mindfulness Book', date: '2026-10-08' }
+            ],
+            reflection: { q1: '', q2: '', q3: '', q4: '' }
+        };
+
+        let kakeiboChartInstance = null;
+
+        // Kakeibo Categories Definitions
+        const pillarsMeta = {
+            survival: { name: 'Needs / Survival', desc: 'Food, Groceries, Medical, Transport', ratio: 0.50, color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' },
+            optional: { name: 'Wants / Optional', desc: 'Dining, Shopping, Cafe, Leisure', ratio: 0.25, color: '#ec4899', bg: 'rgba(236, 72, 153, 0.15)' },
+            culture: { name: 'Culture / Learning', desc: 'Books, Courses, Arts, Hobbies', ratio: 0.15, color: '#a855f7', bg: 'rgba(168, 85, 247, 0.15)' },
+            unexpected: { name: 'Unplanned / Emergency', desc: 'Repairs, Urgent Gifts, Spontaneous', ratio: 0.10, color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)' }
+        };
+
+        // Gamification Levels Configuration
+        const levels = [
+            { level: 1, name: 'Kakeibo Apprentice', xpRequired: 100, icon: '🌱', quote: 'Every journey of financial mindfulness begins with a single step.' },
+            { level: 2, name: 'Budget Monk', xpRequired: 250, icon: '🧘‍♀️', quote: 'Wisdom lies in knowing the difference between Needs and Wants.' },
+            { level: 3, name: 'Master Mindful Saver', xpRequired: 500, icon: '🌌', quote: 'Your financial aura glows brighter with every deliberate choice.' },
+            { level: 4, name: 'Aurora Zen Master', xpRequired: 1000, icon: '✨', quote: 'Total alignment between your money and your life goals.' }
+        ];
+
+        // Gamification Badges Configuration
+        const badgesConfig = [
+            { id: 'first_step', name: 'First Step', icon: '🐾', desc: 'Set up your financial goals', condition: 'Initial setup completed' },
+            { id: 'mindful_logger', name: 'Mindful Logger', icon: '📝', desc: 'Record 3 or more expenses', condition: 'Logged >= 3 transactions' },
+            { id: 'streak_3', name: 'Streak Flame', icon: '🔥', desc: 'Maintain a 3-day active streak', condition: '3 days streak achieved' },
+            { id: 'savings_hero', name: 'Savings Hero', icon: '🎯', desc: 'Set a savings goal of 20% or higher', condition: 'Target rate >= 20%' },
+            { id: 'culture_lover', name: 'Culture Seeker', icon: '🎨', desc: 'Invest in Culture & Learning', condition: 'Logged a Culture purchase' },
+            { id: 'zen_master', name: 'Safe Zone Guardian', icon: '🛡️', desc: 'Keep spending in the Safe Zone', condition: 'Over 50% allowance left' }
+        ];
+
+        // Format helper with active currency symbol
+        function formatMoney(amount) {
+            const formattedNum = Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return `${state.currency}${formattedNum}`;
+        }
+
+        // Initialize App on load
+        window.onload = function() {
+            loadFromLocalStorage();
+            document.getElementById('exp-date').valueAsDate = new Date();
+            checkAndIncrementStreak();
+            syncCurrencySelectors();
+            renderAll();
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('dj_kakeibo_aurora_state', JSON.stringify(state));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('dj_kakeibo_aurora_state') || localStorage.getItem('dj_kakeibo_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                } catch(e) {
+                    console.error("Error loading state:", e);
+                }
+            }
+        }
+
+        // Streak Tracking Engine
+        function checkAndIncrementStreak() {
+            const today = new Date().toISOString().split('T')[0];
+            if (state.lastLoggedDate) {
+                const lastDate = new Date(state.lastLoggedDate);
+                const currentDate = new Date(today);
+                const diffDays = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 1) {
+                    state.streak += 1;
+                    state.lastLoggedDate = today;
+                    checkBadges();
+                } else if (diffDays > 1) {
+                    state.streak = 1; // Reset if missed a day
+                    state.lastLoggedDate = today;
+                }
+            } else {
+                state.lastLoggedDate = today;
+                state.streak = 1;
+            }
+            saveToLocalStorage();
+        }
+
+        // Currency Handling Functions
+        function handleCurrencySelect(e) {
+            const val = e.target.value;
+            if (val === 'custom') {
+                state.isCustomCurrency = true;
+                const customVal = prompt("Enter your custom currency symbol (e.g. Kr, KSh, Rp, S$):", state.currency) || state.currency;
+                state.currency = customVal.trim() || '₹';
+            } else {
+                state.isCustomCurrency = false;
+                state.currency = val;
+            }
+            syncCurrencySelectors();
+            saveToLocalStorage();
+            renderAll();
+        }
+
+        function handleCustomCurrencyInput(e) {
+            state.currency = e.target.value || '₹';
+            syncCurrencySelectors(false);
+            saveToLocalStorage();
+            renderAll();
+        }
+
+        function syncCurrencySelectors(updateSetupInputs = true) {
+            const headerSelect = document.getElementById('header-currency-select');
+            const setupSelect = document.getElementById('setup-currency-select');
+            const customContainer = document.getElementById('custom-currency-container');
+            const customInput = document.getElementById('setup-custom-currency');
+
+            const isStandard = Array.from(headerSelect.options).some(opt => opt.value === state.currency && opt.value !== 'custom');
+
+            if (isStandard && !state.isCustomCurrency) {
+                headerSelect.value = state.currency;
+                setupSelect.value = state.currency;
+                customContainer.classList.add('hidden');
+            } else {
+                headerSelect.value = 'custom';
+                setupSelect.value = 'custom';
+                customContainer.classList.remove('hidden');
+                if (updateSetupInputs) {
+                    customInput.value = state.currency;
+                }
+            }
+
+            document.querySelectorAll('.currency-label-symbol').forEach(el => {
+                el.innerText = state.currency;
+            });
+        }
+
+        // Tab Navigation
+        function switchTab(tabName) {
+            ['dashboard', 'gamification', 'history', 'reflection'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-btn-${t}`);
+                if (btn) {
+                    btn.classList.remove('text-aurora-teal');
+                    btn.classList.add('text-aurora-muted');
+                }
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-btn-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-aurora-muted');
+                activeBtn.classList.add('text-aurora-teal');
+            }
+
+            if (tabName === 'reflection') {
+                renderChart();
+            }
+        }
+
+        // Modal Handlers
+        function openExpenseModal() {
+            document.getElementById('expense-modal').classList.remove('hidden');
+        }
+        function closeExpenseModal() {
+            document.getElementById('expense-modal').classList.add('hidden');
+        }
+
+        function openSetupModal() {
+            document.getElementById('setup-income').value = state.income;
+            document.getElementById('setup-savings-target').value = state.savingsTarget;
+            recalculateSetupAllowance();
+            syncCurrencySelectors();
+            document.getElementById('setup-modal').classList.remove('hidden');
+        }
+        function closeSetupModal() {
+            document.getElementById('setup-modal').classList.add('hidden');
+        }
+
+        // Setup & Preset Savings Helpers
+        function applyPresetSavingsRate(rate) {
+            const income = parseFloat(document.getElementById('setup-income').value) || 0;
+            const calculatedTarget = Math.round(income * rate);
+            document.getElementById('setup-savings-target').value = calculatedTarget;
+            recalculateSetupAllowance();
+        }
+
+        function recalculateSetupAllowance() {
+            const income = parseFloat(document.getElementById('setup-income').value) || 0;
+            const savings = parseFloat(document.getElementById('setup-savings-target').value) || 0;
+            const allowance = Math.max(0, income - savings);
+            document.getElementById('setup-calculated-allowance').innerText = formatMoney(allowance);
+        }
+
+        function handleSetupSubmit(e) {
+            e.preventDefault();
+            state.income = parseFloat(document.getElementById('setup-income').value) || 0;
+            state.savingsTarget = parseFloat(document.getElementById('setup-savings-target').value) || 0;
+
+            addXP(25, "Financial setup saved!");
+            checkBadges();
+            triggerConfetti();
+
+            saveToLocalStorage();
+            renderAll();
+            closeSetupModal();
+        }
+
+        // Expense Handling
+        function handleExpenseSubmit(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('exp-amount').value);
+            const pillar = document.getElementById('exp-pillar').value;
+            const note = document.getElementById('exp-note').value || 'Mindful Purchase';
+            const date = document.getElementById('exp-date').value;
+
+            const newExp = { id: Date.now(), amount, pillar, note, date };
+            state.expenses.unshift(newExp);
+
+            addXP(15, "Mindful Expense Recorded!");
+            checkAndIncrementStreak();
+            checkBadges();
+
+            saveToLocalStorage();
+            renderAll();
+            closeExpenseModal();
+            document.getElementById('expense-form').reset();
+            document.getElementById('exp-date').valueAsDate = new Date();
+        }
+
+        function deleteExpense(id) {
+            state.expenses = state.expenses.filter(item => item.id !== id);
+            saveToLocalStorage();
+            renderAll();
+        }
+
+        // Gamification XP & Badge Engine
+        function addXP(amount, reason) {
+            state.xp += amount;
+            
+            // Check Level Up
+            let currentLevelObj = levels[levels.length - 1];
+            for (let i = 0; i < levels.length; i++) {
+                if (state.xp < levels[i].xpRequired) {
+                    currentLevelObj = levels[i];
+                    break;
+                }
+            }
+            state.level = currentLevelObj.level;
+
+            saveToLocalStorage();
+        }
+
+        function checkBadges() {
+            const newBadges = [...state.unlockedBadges];
+
+            if (!newBadges.includes('first_step')) newBadges.push('first_step');
+            if (state.expenses.length >= 3 && !newBadges.includes('mindful_logger')) newBadges.push('mindful_logger');
+            if (state.streak >= 3 && !newBadges.includes('streak_3')) newBadges.push('streak_3');
+            if ((state.savingsTarget / (state.income || 1)) >= 0.20 && !newBadges.includes('savings_hero')) newBadges.push('savings_hero');
+            if (state.expenses.some(e => e.pillar === 'culture') && !newBadges.includes('culture_lover')) newBadges.push('culture_lover');
+
+            const totalSpent = state.expenses.reduce((a, b) => a + b.amount, 0);
+            const totalAllowance = Math.max(0, state.income - state.savingsTarget);
+            if (totalAllowance > 0 && (totalAllowance - totalSpent) / totalAllowance >= 0.50 && !newBadges.includes('zen_master')) {
+                newBadges.push('zen_master');
+            }
+
+            if (newBadges.length > state.unlockedBadges.length) {
+                triggerConfetti();
+            }
+            state.unlockedBadges = newBadges;
+            saveToLocalStorage();
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.8 },
+                    colors: ['#06b6d4', '#10b981', '#a855f7', '#34d399']
+                });
+            }
+        }
+
+        // Render Functions
+        function renderAll() {
+            renderDashboard();
+            renderPillars();
+            renderExpensesList();
+            renderGamification();
+            renderReflectionInputs();
+        }
+
+        function renderDashboard() {
+            const allowance = Math.max(0, state.income - state.savingsTarget);
+            const spentTotal = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+            const remaining = allowance - spentTotal;
+            const remainingPercentage = allowance > 0 ? Math.max(0, Math.round((remaining / allowance) * 100)) : 0;
+
+            document.getElementById('dash-allowance').innerText = formatMoney(remaining);
+            document.getElementById('dash-income').innerText = formatMoney(state.income);
+            document.getElementById('dash-target-amount').innerText = formatMoney(state.savingsTarget);
+            document.getElementById('dash-spent-total').innerText = formatMoney(spentTotal);
+
+            const savingsRatePct = state.income > 0 ? Math.round((state.savingsTarget / state.income) * 100) : 0;
+            document.getElementById('dash-savings-rate').innerText = `${savingsRatePct}% Target`;
+            document.getElementById('savings-progress-bar').style.width = `${Math.min(100, savingsRatePct)}%`;
+
+            // Render Health Meter Status
+            const healthCard = document.getElementById('health-meter-card');
+            const healthBadge = document.getElementById('health-status-badge');
+            const healthIcon = document.getElementById('health-icon-bg');
+            const healthDesc = document.getElementById('health-status-desc');
+            const healthPct = document.getElementById('health-percentage');
+
+            healthPct.innerText = `(${remainingPercentage}% budget left)`;
+
+            if (remainingPercentage >= 50) {
+                healthBadge.innerText = 'Safe Zone';
+                healthBadge.className = 'text-xs font-bold text-aurora-greenGlow uppercase tracking-wider';
+                healthIcon.innerText = '🛡️';
+                healthIcon.className = 'w-10 h-10 rounded-xl bg-aurora-emerald/20 flex items-center justify-center text-lg';
+                healthDesc.innerText = 'Mindful choices keep your budget glowing!';
+                healthCard.className = 'glass-card p-4 rounded-2xl border flex items-center justify-between border-aurora-emerald/30 shadow-lg';
+            } else if (remainingPercentage >= 20) {
+                healthBadge.innerText = 'On Track';
+                healthBadge.className = 'text-xs font-bold text-amber-400 uppercase tracking-wider';
+                healthIcon.innerText = '⚖️';
+                healthIcon.className = 'w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-lg';
+                healthDesc.innerText = 'Pacing well. Stay conscious of optional wants.';
+                healthCard.className = 'glass-card p-4 rounded-2xl border flex items-center justify-between border-amber-500/30 shadow-lg';
+            } else {
+                healthBadge.innerText = 'Mindful Warning';
+                healthBadge.className = 'text-xs font-bold text-aurora-pink uppercase tracking-wider';
+                healthIcon.innerText = '⚡';
+                healthIcon.className = 'w-10 h-10 rounded-xl bg-aurora-pink/20 flex items-center justify-center text-lg';
+                healthDesc.innerText = 'Allowance nearly spent. Prioritize core Needs.';
+                healthCard.className = 'glass-card p-4 rounded-2xl border flex items-center justify-between border-aurora-pink/30 shadow-lg';
+            }
+        }
+
+        function calculateSpentPerPillar() {
+            const spent = { survival: 0, optional: 0, culture: 0, unexpected: 0 };
+            state.expenses.forEach(exp => {
+                if (spent[exp.pillar] !== undefined) {
+                    spent[exp.pillar] += exp.amount;
+                }
+            });
+            return spent;
+        }
+
+        function renderPillars() {
+            const allowance = Math.max(0, state.income - state.savingsTarget);
+            const spent = calculateSpentPerPillar();
+            const container = document.getElementById('pillars-container');
+            container.innerHTML = '';
+
+            Object.keys(pillarsMeta).forEach(key => {
+                const meta = pillarsMeta[key];
+                const pillarBudget = allowance * meta.ratio;
+                const totalSpent = spent[key] || 0;
+                const percentage = pillarBudget > 0 ? Math.min(Math.round((totalSpent / pillarBudget) * 100), 100) : 0;
+
+                const html = `
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-white flex items-center space-x-2">
+                                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color: ${meta.color}"></span>
+                                <span>${meta.name}</span>
+                            </span>
+                            <span class="text-aurora-muted"><strong class="text-white">${formatMoney(totalSpent)}</strong> / ${formatMoney(pillarBudget)}</span>
+                        </div>
+                        <div class="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                            <div class="h-2 rounded-full transition-all duration-500" style="width: ${percentage}%; background-color: ${meta.color}"></div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function renderExpensesList() {
+            const listContainer = document.getElementById('expenses-list');
+            document.getElementById('total-expenses-count').innerText = `${state.expenses.length} entries`;
+            listContainer.innerHTML = '';
+
+            if (state.expenses.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-10 glass-card rounded-2xl">
+                        <p class="text-xs text-aurora-muted">No expenses recorded yet.</p>
+                        <p class="text-xs font-semibold text-aurora-teal mt-1">Tap + to record your first purchase.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            state.expenses.forEach(exp => {
+                const meta = pillarsMeta[exp.pillar] || pillarsMeta.survival;
+                const html = `
+                    <div class="glass-card p-3.5 rounded-xl border border-white/10 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs" style="background-color: ${meta.bg}; color: ${meta.color}">
+                                ${meta.name[0]}
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">${exp.note}</h4>
+                                <span class="text-[10px] text-aurora-muted block">${meta.name} • ${exp.date}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-bold text-white">-${formatMoney(exp.amount)}</span>
+                            <button onclick="deleteExpense(${exp.id})" class="text-aurora-muted hover:text-aurora-pink text-xs p-1">✕</button>
+                        </div>
+                    </div>
+                `;
+                listContainer.innerHTML += html;
+            });
+        }
+
+        function renderGamification() {
+            // Find Level Object
+            let currentLevelObj = levels[0];
+            let nextLevelObj = levels[levels.length - 1];
+
+            for (let i = 0; i < levels.length; i++) {
+                if (state.xp >= levels[i].xpRequired) {
+                    currentLevelObj = levels[i];
+                    nextLevelObj = levels[i + 1] || levels[i];
+                }
+            }
+
+            document.getElementById('user-level-label').innerText = `LEVEL ${currentLevelObj.level}`;
+            document.getElementById('user-rank-title').innerText = currentLevelObj.name;
+            document.getElementById('user-rank-quote').innerText = `"${currentLevelObj.quote}"`;
+            document.getElementById('user-badge-avatar').innerText = currentLevelObj.icon;
+            document.getElementById('header-user-title').innerText = currentLevelObj.name;
+
+            // XP Calculation
+            const maxXP = nextLevelObj.xpRequired;
+            const xpPct = Math.min(100, Math.round((state.xp / maxXP) * 100));
+            document.getElementById('user-xp-text').innerText = `${state.xp} / ${maxXP} XP`;
+            document.getElementById('user-xp-bar').style.width = `${xpPct}%`;
+
+            // Streak Count
+            document.getElementById('header-streak-count').innerText = state.streak;
+            document.getElementById('streak-days-count').innerText = state.streak;
+
+            // Badges Grid Render
+            const grid = document.getElementById('badges-grid');
+            document.getElementById('badges-unlocked-count').innerText = `${state.unlockedBadges.length} / ${badgesConfig.length} Unlocked`;
+            grid.innerHTML = '';
+
+            badgesConfig.forEach(badge => {
+                const isUnlocked = state.unlockedBadges.includes(badge.id);
+                const html = `
+                    <div class="p-3 rounded-xl border ${isUnlocked ? 'bg-white/10 border-aurora-teal/40' : 'bg-white/5 border-white/5 opacity-50'} flex items-center space-x-2.5">
+                        <div class="text-2xl">${badge.icon}</div>
+                        <div>
+                            <h5 class="text-xs font-bold ${isUnlocked ? 'text-white' : 'text-aurora-muted'}">${badge.name}</h5>
+                            <span class="text-[9px] text-aurora-muted block leading-tight">${badge.desc}</span>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += html;
+            });
+        }
+
+        function renderReflectionInputs() {
+            document.getElementById('ref-q1').value = state.reflection.q1 || '';
+            document.getElementById('ref-q2').value = state.reflection.q2 || '';
+            document.getElementById('ref-q3').value = state.reflection.q3 || '';
+            document.getElementById('ref-q4').value = state.reflection.q4 || '';
+        }
+
+        function saveReflection() {
+            state.reflection.q1 = document.getElementById('ref-q1').value;
+            state.reflection.q2 = document.getElementById('ref-q2').value;
+            state.reflection.q3 = document.getElementById('ref-q3').value;
+            state.reflection.q4 = document.getElementById('ref-q4').value;
+            saveToLocalStorage();
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('kakeiboChart').getContext('2d');
+            const spent = calculateSpentPerPillar();
+
+            const data = {
+                labels: ['Needs', 'Wants', 'Culture', 'Unplanned'],
+                datasets: [{
+                    data: [spent.survival, spent.optional, spent.culture, spent.unexpected],
+                    backgroundColor: ['#10b981', '#ec4899', '#a855f7', '#06b6d4'],
+                    borderWidth: 0
+                }]
+            };
+
+            if (kakeiboChartInstance) {
+                kakeiboChartInstance.destroy();
+            }
+
+            kakeiboChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#94a3b8',
+                                font: { family: 'Plus Jakarta Sans', size: 11 },
+                                boxWidth: 12
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "dj_kakeibo_aurora_data.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function resetData() {
+            if (confirm("Reset all DJ Kakeibo data, streaks, and badges?")) {
+                localStorage.removeItem('dj_kakeibo_aurora_state');
+                localStorage.removeItem('dj_kakeibo_state');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
